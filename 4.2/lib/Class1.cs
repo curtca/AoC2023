@@ -23,5 +23,4 @@ public class Cards
             return cards[linenum++];
         });
     }
-
 }
