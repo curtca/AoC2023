@@ -14,8 +14,8 @@ public class UnitTest1
     public static IEnumerable<object[]> Data =>
         new List<object[]>
         {
-            new object[] { sample, 288 },
-            new object[] { input, 861300 },
+            new object[] { sample, 71503 },
+            new object[] { input, 0 },
         };    
 
 static string sample = 
