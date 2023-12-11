@@ -16,7 +16,7 @@ public class Seeds
                 line.Split(' ').Select(strnum => long.Parse(strnum)).ToArray()
         ));
 
-        var distances = seeds.Select(seed => {
+        return seeds.Select(seed => {
             foreach (var map in maps) {
                 foreach (var submap in map) {
                     if (seed >= submap[1] && seed < submap[1] + submap[2]) {
@@ -27,9 +27,7 @@ public class Seeds
             }
 
             return seed;
-        });
-
-        return distances.Min();
+        }).Min();
     }
 
 }
