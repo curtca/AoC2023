@@ -17,7 +17,7 @@ public class UnitTest1
             new object[] { sample1, 4 },
             new object[] { sample2, 8 },
             new object[] { sample3, 10 },
-            new object[] { input, 6947 },
+            new object[] { input, 273 },
         };    
 
 static string sample1 = 
