@@ -8,10 +8,10 @@ namespace lib;
 
 public class CosmicExpansion
 {
-    public static long Distances(string input)
+    public static long Distances(long factor, string input)
     {
         string[] lines = input.Split(Environment.NewLine);
-        var galaxies = new List<(int, int)>();
+        var galaxies = new List<(long, long)>();
         for (int y = 0; y < lines.Length; y++) {
             for (int x = 0; x < lines[0].Length; x++) {
                 if (lines[y][x] == '#')
@@ -24,7 +24,7 @@ public class CosmicExpansion
             if (galaxies.All(g => g.Item2 != y)) {
                 for (int i = 0; i < galaxies.Count; i++) {
                     if (galaxies[i].Item2 > y)
-                        galaxies[i] = (galaxies[i].Item1, galaxies[i].Item2 + 1);
+                        galaxies[i] = (galaxies[i].Item1, galaxies[i].Item2 + factor - 1);
                 }
             }
         }
@@ -34,7 +34,7 @@ public class CosmicExpansion
             if (galaxies.All(g => g.Item1 != x)) {
                 for (int i = 0; i < galaxies.Count; i++) {
                     if (galaxies[i].Item1 > x)
-                        galaxies[i] = (galaxies[i].Item1+1, galaxies[i].Item2);
+                        galaxies[i] = (galaxies[i].Item1 + factor - 1, galaxies[i].Item2);
                 }
             }
         }

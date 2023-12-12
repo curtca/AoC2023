@@ -6,16 +6,18 @@ public class UnitTest1
 {
     [Theory]
     [MemberData(nameof(Data))]
-    public void Test1(string value, long number)
+    public void Test1(string value, long factor, long number)
     {
-        Assert.Equal(number, lib.CosmicExpansion.Distances(value));
+        Assert.Equal(number, lib.CosmicExpansion.Distances(factor, value));
     }
 
     public static IEnumerable<object[]> Data =>
         new List<object[]>
         {
-            new object[] { sample, 374 },
-            new object[] { input, 0 },
+            new object[] { sample, 2, 374 },
+            new object[] { sample, 10, 1030 },
+            new object[] { sample, 100, 8410 },
+            new object[] { input, 1000000, 678728808158 },
         };    
 
 static string sample = 
