@@ -46,16 +46,18 @@ public class HotSprings
         long sum = 0;
 
         for (int space = 0; space <= maxspaces; space++) {
+            if (piece > 0 && template[pos + space - 1] == '#') break; // can't skip spaces that have #
+
             bool canPlaceHere = true;
             for (int i = 0; i < sizes[piece]; i++) {
-                if (template[pos + i] == '.') {
+                if (template[pos + space + i] == '.') {
                     canPlaceHere = false;
                     break;
                 }
             }
             bool lastPiece = piece == sizes.Length - 1;
 
-            if (canPlaceHere && (lastPiece || (template[pos + sizes[piece] + space] != '#'))) { // need a space after each piece
+            if (canPlaceHere && (lastPiece || (template[pos + sizes[piece] + space] != '#'))) { // need a space before and after each piece
                 if (lastPiece)
                     sum ++;
                 else

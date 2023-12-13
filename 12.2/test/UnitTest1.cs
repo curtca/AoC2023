@@ -14,6 +14,7 @@ public class UnitTest1
     public static IEnumerable<object[]> Data =>
         new List<object[]>
         {
+            new object[] { sampleX, 506250 },
             new object[] { sample, 525152 },
             new object[] { input, -1 },
         };
@@ -25,6 +26,8 @@ public class UnitTest1
 ????.#...#... 4,1,1
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
+
+static string sampleX = "?###???????? 3,2,1";
 
 // up to 19 question marks...
     static string input = 
