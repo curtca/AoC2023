@@ -5,35 +5,36 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Net.NetworkInformation;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.VisualBasic.FileIO;
 
 namespace lib;
 
 public class Class
 {
+    public static PriorityQueue<Step, int> steps = new(); 
+    public static List<Step>[,] visited = null;
+    public static int rows = 0, cols = 0;
+    public static char[,] map = null;
+
     public static long Function(string input) {
         string[] lines = input.Split(Environment.NewLine);
-        var map = new char[lines[0].Length, lines.Length];
-        int rows = lines.Length, cols = lines[0].Length;
+        map = new char[lines[0].Length, lines.Length];
+        rows = lines.Length; cols = lines[0].Length;
+        visited = new List<Step>[cols,rows]; // "have I been here" by x, y, and for each direction and distance in that direction
+
         for (int x = 0; x < cols; x++)
-            for (int y = 0; y < rows; y++)
+            for (int y = 0; y < rows; y++) {
                 map[x, y] = (char) (lines[y][x] - '0');
+                visited[x,y] = new List<Step>();
+            }
 
         long shortest = 0;
 
-        // Changes to implement: 
-        // Direction is a x, y vector (L/R as rotation)
-        // "have I been here" by x, y, direction, distance (in that direction)
-
-
-        // 0 = up, 1 = right, 2 = down, 3 = left (positive y is down)
-        // Priority: Best-case distance from here to end (assuming 1s on all unvisited spaces)
-        //  Buuuut........... the shortest path to a given space may not be correct given the 3-in-a-row constraint
-        // So, keep track of history of each path, and just don't visit a space that ITS' path has visited.
-
-        PriorityQueue<Step, int> steps = new(); 
-        var firststep = new Step(0, 0, 0, -1, null);
+        var firststep = new Step(0, 0, 0, new Dir(1,0), null);
         steps.Enqueue(firststep, cols + rows);
 
         while (true) {
@@ -41,35 +42,56 @@ public class Class
 
             if (step.x == cols - 1 && step.y == rows - 1) {
                 shortest = step.sofar;
+                string debugmap = AnnotateMap(step);
+                Debug.WriteLine(debugmap);
                 break; // winner winner chicken dinner
             }
 
-            int blockeddir = (step.parent is not null && step.dir == step.parent.dir
-                && step.parent.parent is not null && step.parent.parent.dir == step.dir) 
-                ? step.dir : -1;
-
-            // visited[step.x, step.y] = true; 
-            if (step.y > 0        && blockeddir != 0 && !VisitedFrom(step, step.x, step.y - 1)) // can move up?
-                steps.Enqueue(new Step(step.x, step.y - 1, step.sofar + map[step.x, step.y - 1], 0, step)
-                    , step.sofar + map[step.x, step.y - 1] + rows + cols - step.x - (step.y - 1));
-            
-            if (step.x < cols - 1 && blockeddir != 1 && !VisitedFrom(step, step.x + 1, step.y)) // can move right?
-                steps.Enqueue(new Step(step.x + 1, step.y, step.sofar + map[step.x + 1, step.y], 1, step)
-                    , step.sofar + map[step.x + 1, step.y] + rows + cols - (step.x + 1) - step.y);
-            
-            if (step.y < rows - 1 && blockeddir != 2 && !VisitedFrom(step, step.x, step.y + 1)) // can move down?
-                steps.Enqueue(new Step(step.x, step.y + 1, step.sofar + map[step.x, step.y + 1], 2, step)
-                    , step.sofar + map[step.x, step.y + 1] + rows + cols - step.x - (step.y + 1));
-            
-            if (step.x > 0        && blockeddir != 3 && !VisitedFrom(step, step.x - 1, step.y)) // can move left?
-                steps.Enqueue(new Step(step.x - 1, step.y, step.sofar + map[step.x - 1, step.y], 3, step)
-                    , step.sofar + map[step.x - 1, step.y] + rows + cols - (step.x - 1) - step.y);
+            step.Visit(step.dir);
+            step.Visit(step.dir.Left());
+            step.Visit(step.dir.Right());
         }
 
         return shortest;
     }
 
+    private static string AnnotateMap(Step step)
+    {
+        var newmap = Class.map.Clone();
+        var strmap = new char[Class.cols, Class.rows];
 
+        for (int y = 0; y < rows; y++)
+            for (int x = 0; x < cols; x++)
+                strmap[x,y] += (char) ('0' + Class.map[x, y]);
+
+        while (step is not null) {
+            Dir d = step.dir;
+            char c = '?';
+            if (d.x == 1 && d.y == 0)
+                c = '>';
+            else if (d.x == -1 && d.y == 0)
+                c = '<';
+            else if (d.x == 0 && d.y == 1)
+                c = 'V';
+            else if (d.x ==0 && d.y == -1)
+                c = '^';
+            strmap[step.x, step.y] = c;
+            step = step.parent;
+        }
+
+        string output = "";
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < cols; x++)
+                output += strmap[x, y];
+            output += Environment.NewLine;
+        }
+
+        return output;
+    }
+
+
+
+    // Has this step already been visited by this path?
     private static bool VisitedFrom(Step? step, int x, int y)
     {
         // only need to check max 10 parents back, because if it's more than that we should have gone a different way anyway
@@ -88,14 +110,63 @@ public class Class
 
 public class Step
 {
-    public int x, y, sofar, dir;
+    public int x, y, sofar, inarow;
+    public Dir dir;
     public Step? parent = null;
-    public Step (int x, int y, int sofar, int dir, Step? parent)
+    public Step (int x, int y, int sofar, Dir dir, Step? parent)
     {
         this.x = x;
         this.y = y;
         this.dir = dir;
         this.sofar = sofar;
         this.parent = parent;
+        this.inarow = parent is null ? 0 : 
+            parent.dir == dir ? parent.inarow + 1 : 1;
     }
+
+    internal void Visit(Dir dir)
+    {
+        int newx = x + dir.x;
+        int newy = y + dir.y;
+        if (newx < 0 || newx == Class.cols || newy < 0 || newy == Class.rows)
+            return;
+
+        Step newstep = new Step(newx, newy, sofar + Class.map[newx, newy], dir, this);
+        if (newstep.inarow == 4)
+            return; // would be 4th step in a row
+
+        foreach (Step step in Class.visited[newx, newy]) // already found this location earlier going same direction, and same number of steps in a row?
+            if (step.dir == newstep.dir && step.inarow == newstep.inarow)
+                return;
+        
+        Class.visited[newx, newy].Add(newstep);
+        Class.steps.Enqueue(newstep, newstep.sofar + Class.cols + Class.rows - newstep.x - newstep.y);
+    }
+}
+
+public struct Dir 
+{
+    public int x, y;
+    public Dir(int x, int y)
+    {
+        this.x = x;
+        this.y = y;
+    }
+    public Dir Left()
+    {
+        return new Dir(-y, x);
+    }
+    public Dir Right()
+    {
+        return new Dir(y, -x);
+    }
+    public static bool operator ==(Dir d1, Dir d2)
+    {
+        return d1.x == d2.x && d1.y == d2.y;
+    }
+    public static bool operator !=(Dir d1, Dir d2)
+    {
+        return !(d1 == d2);
+    }
+
 }
