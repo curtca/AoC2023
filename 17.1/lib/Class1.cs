@@ -21,6 +21,12 @@ public class Class
                 map[x, y] = (char) (lines[y][x] - '0');
 
         long shortest = 0;
+
+        // Changes to implement: 
+        // Direction is a x, y vector (L/R as rotation)
+        // "have I been here" by x, y, direction, distance (in that direction)
+
+
         // 0 = up, 1 = right, 2 = down, 3 = left (positive y is down)
         // Priority: Best-case distance from here to end (assuming 1s on all unvisited spaces)
         //  Buuuut........... the shortest path to a given space may not be correct given the 3-in-a-row constraint
